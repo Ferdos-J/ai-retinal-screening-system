@@ -11,11 +11,16 @@ To develop a clinical decision-support application powered by a computer vision 
 * Clinical screening technicians
 * Hospital triage staff managing preoperative workflows
 
-## Planned Technologies
-* Python and PyTorch for model development and computer vision
-* YOLOv8 for object detection and bounding box generation
-* FastAPI for serving backend model predictions
-* Kotlin and Firebase for the clinical mobile application interface
+## Planned Features
+* Digital fundus image upload and processing
+* Automated YOLOv8 object detection for diabetic retinopathy lesions
+* Visual bounding box annotations with confidence scores
+* Pre-surgical risk score calculation
+* Local patient profile management
+
+## Scope
+* **In Scope:** Detection of diabetic retinopathy markers via bounding boxes; standalone clinical frontend app with a local mock database.
+* **Out of Scope:** Integration with live hospital HL7/FHIR EHR networks; detection of non-retinal diseases.
 
 ## Current Status
-Week 1 Project definition, problem scoping, and researching.
+Week 2: Requirements engineering, user stories, system scope definition, and project planning.
