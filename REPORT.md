@@ -63,3 +63,27 @@ As a clinical screening technician, I want to upload a patient's fundus scan int
 | Week 7 | Finalization of UI integration with Firebase mock patient records. |
 | Week 8 | Report completion and professional README with software installation instructions. |
 | Week 9 | Final demonstration of end-to-end image upload, API inference, and UI risk assessment. |
+
+## 12. Methodology and Proposed System
+The proposed engineering approach utilizes a decoupled client-server architecture to provide automated pre-surgical screening for diabetic retinopathy. The system boundaries isolate the clinical user interface (Client Workstation) from the heavy AI processing (Backend Server). The primary goal is to deliver a zero-footprint web application for ophthalmic surgeons to instantly verify AI diagnostic reasoning via bounding boxes.
+
+## 13. System Architecture
+As illustrated in the system architecture diagram (Figure 3.1), the system consists of five main components. The **React Web Client** acts as the clinical interface, sending fundus image files via HTTP POST to the **FastAPI Backend Server**. The backend routes the preprocessed image tensor to the **YOLOv8 Engine** for core object detection inference. The resulting bounding box coordinates are returned to the frontend, where the **Cornerstone.js Viewer** natively draws the clinical overlays. Patient metadata is stored securely in an external **Firebase Cloud System**. 
+
+## 14. Technology Selection and Design Decisions
+**ADR-01: Frontend Framework**
+* **Selected Option:** React with TypeScript and Cornerstone.js.
+* **Alternative Considered:** Kotlin native Android application.
+* **Justification:** Hospital IT departments require "zero-footprint" web viewers that run on any clinical workstation without local software installations. Cornerstone.js provides native medical imaging tools that mobile frameworks lack.
+
+**ADR-02: AI Inference Engine**
+* **Selected Option:** YOLOv8 (Object Detection).
+* **Alternative Considered:** ResNet-50 (Image Classification).
+* **Justification:** Explainable AI (XAI) is a hard requirement for surgical trust. YOLOv8 provides precise bounding boxes around lesions rather than a "black box" percentage score.
+
+## 15. Traceability and Flow
+**End-to-End Data Flow:** A triage technician uploads a `.jpg` file in the React client. The FastAPI server receives the HTTP POST request, validates it, and forwards the image tensor to YOLOv8. YOLOv8 outputs a JSON array of lesion coordinates (X, Y, Width, Height). FastAPI writes the metadata to Firebase, and forwards the JSON back to the React client where Cornerstone.js renders the final overlay.
+
+**Design Risks:** 
+1. Cornerstone.js canvas integration complexity (Mitigated by testing a standalone HTML viewer first). 
+2. High AI inference latency (Mitigated by exporting the YOLOv8 model to the ONNX format for faster CPU execution).
