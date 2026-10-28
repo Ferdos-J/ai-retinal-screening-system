@@ -23,4 +23,4 @@ To develop a clinical decision-support application powered by a computer vision 
 * **Out of Scope:** Integration with live hospital HL7/FHIR EHR networks; detection of non-retinal diseases.
 
 ## Current Status
-Week 3: Architecture and Technical Design
+Week 3: Architecture and Technical Designs
