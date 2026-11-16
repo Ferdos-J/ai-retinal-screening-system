@@ -1,41 +1,39 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 from fastapi.responses import JSONResponse
-from ultralytics import YOLO
-from PIL import Image
-import io
+from model import RetinalInferenceEngine
+from utils import validate_image_upload
+import time
 
-app = FastAPI(title="Retinal Screening API Prototype")
+app = FastAPI(title="Retinal Screening API - Core Implementation")
 
-# Loading the base YOLOv8 model (using CPU for local Mac implementation)
-model = YOLO("yolov8n.pt")
+# Initialize modular inference engine instance
+inference_engine = RetinalInferenceEngine("yolov8n.pt")
 
 @app.post("/predict/")
-async def predict_anomaly(file: UploadFile = File(...)):
-    # Ensure te file type
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
+async def predict_anomaly(
+    file: UploadFile = File(...)
+):
+    start_time = time.time()
+    
+    # Read file bytes for validation and processing
+    image_bytes = await file.read()
+    
+    # Apply input validation (Stage 2 / NFR-02)
+    validate_image_upload(file.content_type, len(image_bytes))
     
     try:
-        # Reading image bytes
-        image_bytes = await file.read()
-        image = Image.open(io.BytesIO(image_bytes))
+        # Run inference via modular engine (Default threshold 0.25)
+        detections = inference_engine.predict(image_bytes, confidence_threshold=0.25)
         
-        results = model(image)
+        processing_time = round(time.time() - start_time, 3)
         
-        # Viewing the bounding boxes
-        detections = []
-        for result in results:
-            boxes = result.boxes
-            for box in boxes:
-                # Format: [x_center, y_center, width, height]
-                coords = box.xywh[0].tolist()
-                confidence = float(box.conf[0])
-                detections.append({
-                    "bounding_box": coords,
-                    "confidence": round(confidence, 2)
-                })
-                
-        return JSONResponse(content={"status": "success", "detections": detections})
+        return JSONResponse(content={
+            "status": "success",
+            "filename": file.filename,
+            "processing_time_seconds": processing_time,
+            "detections_count": len(detections),
+            "detections": detections
+        })
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
