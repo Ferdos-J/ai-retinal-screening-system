@@ -178,20 +178,20 @@ The current prototype successfully processes images, but it utilizes the baselin
 | **NFR-02** | Not Evaluated | Fully verified via automated input validation error handling. |
 
 ### 22.2 Development Stage 2: Initial Core Functionality & Validation
-* **Date:** November 2026[cite: 36]
-* **Objective:** Implement rigorous input validation and error-handling mechanisms to fulfill NFR-02[cite: 16, 36].
+* **Date:** November 2026
+* **Objective:** Implement rigorous input validation and error-handling mechanisms to fulfill NFR-02.
 * **Implemented Functionality:** Created `utils.py` containing `validate_image_upload()`, which checks file MIME types and size constraints before tensor processing, returning explicit HTTP 400 rejection codes for invalid inputs.
 * **Engineering Decision:** Separating validation logic from routing keeps API controllers clean and ensures invalid payloads are rejected prior to memory allocation.
 
 ### 22.3 Development Stage 3: Main System Development & Modularity
-* **Date:** November 2026[cite: 37]
-* **Objective:** Refactor the monolithic Week 4 prototype into a decoupled, modular architecture adhering to separation of concerns[cite: 29, 30].
-* **Implemented Functionality:** Split application logic into `main.py` (FastAPI routing), `model.py` (Encapsulated YOLOv8 inference class with threshold filtering), and `utils.py` (Validation layer). Integrated runtime execution metrics (`processing_time_seconds`) into the API response[cite: 30].
-* **Engineering Decision:** Encapsulating the YOLOv8 model inside a dedicated `RetinalInferenceEngine` class isolates deep learning dependencies from web transport layers, simplifying future unit testing[cite: 30].
+* **Date:** November 2026
+* **Objective:** Refactor the monolithic Week 4 prototype into a decoupled, modular architecture adhering to separation of concerns.
+* **Implemented Functionality:** Split application logic into `main.py` (FastAPI routing), `model.py` (Encapsulated YOLOv8 inference class with threshold filtering), and `utils.py` (Validation layer). Integrated runtime execution metrics (`processing_time_seconds`) into the API response.
+* **Engineering Decision:** Encapsulating the YOLOv8 model inside a dedicated `RetinalInferenceEngine` class isolates deep learning dependencies from web transport layers, simplifying future unit testing.
 
 ### 22.4 Architecture Comparison (Planned vs. Implemented)
 | Component | Original Design (Week 3) | Current State (Week 5) | Justification |
 | :--- | :--- | :--- | :--- |
-| **Backend Server** | Monolithic `main.py` script | Modular package (`main.py`, `model.py`, `utils.py`) | Improved maintainability, separation of concerns, and testability[cite: 30]. |
+| **Backend Server** | Monolithic `main.py` script | Modular package (`main.py`, `model.py`, `utils.py`) | Improved maintainability, separation of concerns, and testability. |
 | **Inference Pipeline** | Unfiltered raw tensor output | Filtered confidence-threshold parsing | Prevents low-confidence noise from cluttering clinical outputs. |
-| **Frontend UI** | React / Cornerstone.js | Deferred to Week 7 | Prioritized backend algorithmic stability before UI integration[cite: 18]. |
+| **Frontend UI** | React / Cornerstone.js | Deferred to Week 7 | Prioritized backend algorithmic stability before UI integration. |
