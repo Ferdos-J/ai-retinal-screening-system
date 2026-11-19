@@ -220,7 +220,7 @@ Each test case maps directly to documented system requirements. Table 23.1 summa
 | **T05** | Inference Engine (`model.py`) / Verify latency threshold | NFR-01 | `224x224` JPEG image timed end-to-end | Total response time strictly `< 5.0` seconds | Completed in `~0.18` seconds (`< 5.0s` threshold) | **PASS** |
 
 ![Figure 25.1: Automated Pytest Verification Output](docs/evidence-week6/pytest-all-passed.png)
-**Figure 23.1:** Terminal execution output of `pytest -v` confirming all five automated integration, validation, boundary, and latency test cases pass.
+**Figure 25.1:** Terminal execution output of `pytest -v` confirming all five automated integration, validation, boundary, and latency test cases pass.
 
 ### 26. Defect Investigation & Debugging Record (T04)
 During initial execution of the automated test suite, boundary test case **T04** exposed an unhandled input edge case
