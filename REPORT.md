@@ -195,3 +195,59 @@ The current prototype successfully processes images, but it utilizes the baselin
 | **Backend Server** | Monolithic `main.py` script | Modular package (`main.py`, `model.py`, `utils.py`) | Improved maintainability, separation of concerns, and testability. |
 | **Inference Pipeline** | Unfiltered raw tensor output | Filtered confidence-threshold parsing | Prevents low-confidence noise from cluttering clinical outputs. |
 | **Frontend UI** | React / Cornerstone.js | Deferred to Week 7 | Prioritized backend algorithmic stability before UI integration. |
+
+## 23. Testing and Validation
+
+### 24. Testing Methodology
+To validate the functional and non-functional requirements established in Week 2 without relying solely on manual browser interactions, an automated testing suite was implemented using `pytest` and FastAPI's `TestClient` (`httpx`). 
+
+* **Testing Scope & Methods:**
+  * **API Integration Testing (`T01`):** Verifies end-to-end HTTP `POST /predict/` communication, in-memory image decoding via Pillow, and YOLOv8 tensor inference (`FR-01`, `FR-02`).
+  * **Negative / Invalid Input Testing (`T02`):** Validates strict MIME-type filtering by submitting non-image payloads (`.pdf`) (`NFR-02`).
+  * **Boundary Value Analysis (`T03`, `T04`):** Evaluates system behavior at extreme file size boundaries, specifically testing payloads exceeding the 10 MB ceiling and empty 0-byte streams.
+  * **Performance Benchmarking (`T05`):** Measures end-to-end API response latency using a standard `224x224` RGB image to verify compliance with the 5-second execution threshold (`NFR-01`).
+* **Test Environment:** Executed locally on macOS (Intel x86_64) within a Python 3.11 virtual environment running `pytest` against the modular backend (`main.py`, `model.py`, `utils.py`).
+
+### 25. Validation & Test Case Execution Results
+Each test case maps directly to documented system requirements. Table 23.1 summarizes the inputs, expected outcomes, observed behavior, and final pass/fail status following defect resolution.
+
+| Test ID | Component / Objective | Requirement | Input | Expected Result | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **T01** | API Inference Pipeline / Process valid fundus-sized image | FR-01, FR-02 | Valid `224x224` JPEG byte stream (`image/jpeg`) | HTTP `200 OK` with JSON `status: "success"` and `detections` list | HTTP `200 OK` returned with valid JSON structure and detection list | **PASS** |
+| **T02** | Input Validator (`utils.py`) / Reject non-image format | NFR-02 | Mock `.pdf` payload (`application/pdf`) | HTTP `400 Bad Request` citing invalid file type | HTTP `400 Bad Request` returned with `"Invalid file type"` detail | **PASS** |
+| **T03** | Input Validator (`utils.py`) / Enforce upper size boundary | NFR-02 | Oversized `10.0001 MB` JPEG byte stream | HTTP `400 Bad Request` citing 10 MB limit | HTTP `400 Bad Request` returned with `"10MB maximum threshold"` detail | **PASS** |
+| **T04** | Input Validator (`utils.py`) / Enforce lower 0-byte boundary | NFR-02 | Empty `0-byte` JPEG file stream | HTTP `400 Bad Request` rejecting empty file | Initial run failed (`500` crash); after `utils.py` fix, returned HTTP `400` | **PASS** *(Retest)* |
+| **T05** | Inference Engine (`model.py`) / Verify latency threshold | NFR-01 | `224x224` JPEG image timed end-to-end | Total response time strictly `< 5.0` seconds | Completed in `~0.18` seconds (`< 5.0s` threshold) | **PASS** |
+
+![Figure 25.1: Automated Pytest Verification Output](docs/evidence-week6/pytest-all-passed.png)
+**Figure 23.1:** Terminal execution output of `pytest -v` confirming all five automated integration, validation, boundary, and latency test cases pass.
+
+### 26. Defect Investigation & Debugging Record (T04)
+During initial execution of the automated test suite, boundary test case **T04** exposed an unhandled input edge case
+* **Observed Failure:** Submitting an empty `0-byte` image file with a valid `image/jpeg` MIME header caused `test_reject_empty_image_file` to fail with an unhandled `500 Internal Server Error` (`PIL.UnidentifiedImageError`) rather than a controlled client rejection.
+* **Root Cause Diagnosis:** Inspection of `src/backend/utils.py` revealed that `validate_image_upload()` checked whether `file_size > 10 * 1024 * 1024`, but lacked a lower-bound check for `file_size == 0`. Consequently, empty byte streams bypassed validation and crashed inside `Image.open()`.
+* **Correction Implemented:** Added an explicit lower-bound guard (`if file_size == 0: raise HTTPException(status_code=400, ...)`) at the entry point of `validate_image_upload()` in `src/backend/utils.py`.
+* **Retest Outcome:** Rerunning `pytest -v` confirmed that `T04` now returns HTTP `400 Bad Request` cleanly, bringing the test suite to 5/5 passing tests.
+
+### 27. Experimental Results & Current Limitations
+* **Latency Experiment (`NFR-01`):** Across repeated executions on local Intel CPU hardware, inference on a `224x224` image averaged under `0.25 seconds`, comfortably satisfying the 5-second clinical response constraint without requiring GPU acceleration.
+* **Remaining Limitations:** The current validation suite verifies API transport, error boundaries, and baseline inference latency using `yolov8n.pt` weights. Quantitative clinical accuracy metrics (mAP@50, Precision, Recall on annotated diabetic retinopathy datasets such as IDRiD) and frontend Canvas rendering tests remain scheduled for integration and evaluation in future milestones.
+
+### 28. Development Process (Stage 4: Testing and Correction)
+| Field | Student Entry |
+| :--- | :--- |
+| **Date and Objective** | November 19, 2026 — Implement automated API, boundary, and performance tests to validate `FR-01`, `FR-02`, `NFR-01`, and `NFR-02`. |
+| **Functionality & Technical Decision** | Tested `/predict/` endpoint and `utils.py` validation logic using `pytest` and FastAPI `TestClient` to ensure repeatable, deterministic regression testing without manual UI overhead. |
+| **Problem and Solution** | **Failure (`T04`):** A `0-byte` image payload bypassed validation and caused a `500` Pillow decoding crash. **Solution:** Added a `file_size == 0` guard in `src/backend/utils.py` raising HTTP `400`, verified via retest (`5 passed`). |
+| **Evidence & GitHub Commit** | `docs/evidence-week6/pytest-failure-t04.png`, `docs/evidence-week6/pytest-all-passed.png` — Commit: `test: add automated pytest suite and fix 0-byte empty upload validation bug`. |
+| **Next Step** | Week 7: Finalize reproducibility documentation (`README.md`, `requirements.txt`) and integrate the React/Cornerstone.js frontend viewer with Firebase mock records
+
+### 29. Report Summary Sheet
+* **Student / ID:** Ferdos Jamal Mohamed Berhan — 220513674
+* **Project Title:** AI-Assisted Retinal Anomaly Detection System for Ophthalmic Pre-Surgical Screening
+* **GitHub URL:** https://github.com/Ferdos-J/ai-retinal-screening-system
+* **Week 6 Dates:** November 13 – November 19, 2026
+* **Features Tested / Requirements Checked:** Image upload transport (`FR-01`), YOLOv8 inference response (`FR-02`), inference latency `< 5s` (`NFR-01`), and MIME-type / file-size boundary validation (`NFR-02`).
+* **Testing Methods & Justification:** Automated API integration testing, boundary value analysis, negative input testing, and latency benchmarking using `pytest` and `TestClient`.
+* **Key Results, Failures & Corrections:** 4 of 5 tests passed initially; boundary test `T04` revealed an unhandled `0-byte` empty upload crash (`500`), which was fixed in `utils.py` and verified (`5/5 PASS`).
+* **Links to Evidence & Bug-Fix Commits:** `tests/test_api.py`, `src/backend/utils.py`, `docs/evidence-week6/pytest-all-passed.png` (`test: add automated pytest suite and fix 0-byte empty upload validation bug`).
