@@ -1,4 +1,4 @@
-# Graduation Project Report: Week 1 Draft
+# Graduation Project Report
 
 ## 1. Introduction
 
@@ -166,3 +166,32 @@ This prototype implements the backend API inference engine, fulfilling functiona
 ## 21. Current Limitations and Next Steps
 
 The current prototype successfully processes images, but it utilizes the baseline YOLOv8 nano weights instead of a custom-trained medical dataset. Additionally, the system lacks a graphical user interface. The immediate priority for Week 5 is to scaffold the React/TypeScript frontend and establish the CORS policies required to allow the browser to communicate with this local FastAPI backend.
+
+## 22. Week 5: Core Implementation & Software Quality
+
+### 22.1 Task 1: Requirement Status Review
+| Requirement ID | Week 4 Status | Week 5 Target |
+| :--- | :--- | :--- |
+| **FR-01** | Implemented (Basic upload) | Enhanced with strict MIME-type and size validation (NFR-02). |
+| **FR-02** | Implemented (Raw inference) | Upgraded with modular architecture and adjustable confidence thresholding. |
+| **FR-03** | Partially Implemented | Prepared structured coordinate output for frontend rendering. |
+| **NFR-02** | Not Evaluated | Fully verified via automated input validation error handling. |
+
+### 22.2 Development Stage 2: Initial Core Functionality & Validation
+* **Date:** November 2026
+* **Objective:** Implement rigorous input validation and error-handling mechanisms to fulfill NFR-02.
+* **Implemented Functionality:** Created `utils.py` containing `validate_image_upload()`, which checks file MIME types and size constraints before tensor processing, returning explicit HTTP 400 rejection codes for invalid inputs.
+* **Engineering Decision:** Separating validation logic from routing keeps API controllers clean and ensures invalid payloads are rejected prior to memory allocation.
+
+### 22.3 Development Stage 3: Main System Development & Modularity
+* **Date:** November 2026
+* **Objective:** Refactor the monolithic Week 4 prototype into a decoupled, modular architecture adhering to separation of concerns.
+* **Implemented Functionality:** Split application logic into `main.py` (FastAPI routing), `model.py` (Encapsulated YOLOv8 inference class with threshold filtering), and `utils.py` (Validation layer). Integrated runtime execution metrics (`processing_time_seconds`) into the API response.
+* **Engineering Decision:** Encapsulating the YOLOv8 model inside a dedicated `RetinalInferenceEngine` class isolates deep learning dependencies from web transport layers, simplifying future unit testing.
+
+### 22.4 Architecture Comparison (Planned vs. Implemented)
+| Component | Original Design (Week 3) | Current State (Week 5) | Justification |
+| :--- | :--- | :--- | :--- |
+| **Backend Server** | Monolithic `main.py` script | Modular package (`main.py`, `model.py`, `utils.py`) | Improved maintainability, separation of concerns, and testability. |
+| **Inference Pipeline** | Unfiltered raw tensor output | Filtered confidence-threshold parsing | Prevents low-confidence noise from cluttering clinical outputs. |
+| **Frontend UI** | React / Cornerstone.js | Deferred to Week 7 | Prioritized backend algorithmic stability before UI integration. |
